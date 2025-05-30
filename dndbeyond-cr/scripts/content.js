@@ -56,37 +56,49 @@ setTimeout(() => {
         return div.firstChild;
     }
     function buildCrHtml(cr, xp) {
-        return createElementFromHTML("<div class='encounter-builder-difficulty-summary__flex-wrapper'>" +
+        let diff = "Low";
+        if(xp > cr.moderate) diff = "Moderate";
+        if(xp > cr.high) diff = "High";
+        return createElementFromHTML("<div class='encounter-builder-difficulty-summary__flex-wrapper dndb-cr-calc'>" +
             "<div class='encounter-builder-difficulty-summary__stats'>" +
                 "<div class='encounter-builder-difficulty-summary__stat-difficulty line-item line-item--vertical'>" +
                     "<div class='line-item__label'>Difficulty</div>" +
                     "<div class='line-item__value'>" +
-                        "<span class='difficulty-text difficulty-text--'>None</span> " +
+                        "<span class='difficulty-text difficulty-text--'>" + diff + "</span> " +
                     "</div>" +
                 "</div>" +
                 "<div class='encounter-builder-difficulty-summary__stat-total-xp line-item line-item--vertical'>" +
                     "<div class='line-item__label' title='Total Experience Points'>Total XP</div>" +
-                    "<div class='line-item__value'>0</div>" +
+                    "<div class='line-item__value'>" + xp + "</div>" +
                 "</div>" +
             "</div>" +
             "<div class='encounter-builder-difficulty-summary__xp-legend'>" +
                 "<div class='line-item line-item--horizontal'>" +
                     "<div class='line-item__label'>Low:</div>" +
-                    "<div class='line-item__value'>0 XP</div>" +
+                    "<div class='line-item__value'>" + cr.low + " XP</div>" +
                 "</div>" +
                 "<div class='line-item line-item--horizontal'>" +
                     "<div class='line-item__label'>Moderate:</div>" +
-                    "<div class='line-item__value'>0 XP</div>" +
+                    "<div class='line-item__value'>" + cr.moderate + " XP</div>" +
                 "</div>" +
                 "<div class='line-item line-item--horizontal'>" +
                     "<div class='line-item__label'>High:</div>" +
-                    "<div class='line-item__value'>0 XP</div>" +
+                    "<div class='line-item__value'>" + cr.high + " XP</div>" +
                 "</div>" +
             "</div>" +
         "</div>");
     }
     function getXp() {
-
+        let xps = document.querySelectorAll(".encounter-builder-sidebar__tabs .difficulty__value");
+        let counts = document.querySelectorAll(".encounter-monster__quantity-stepper.input-stepper.input-stepper--mini.input-stepper--vertical input");
+        let budget = 0;
+        for(let i = 0; i < counts.length; i++) {
+            let count = Number(counts[i].value);
+            let xp  = Number(xps[(i * 2) + 1].innerText);
+            console.log(count, xp);
+            budget += xp * count;
+        }
+        return budget;
     };
 
     container.appendChild(buildCrHtml(partyCR, 0));
@@ -94,7 +106,8 @@ setTimeout(() => {
     MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
     var observer = new MutationObserver(function(mutations, observer) {
-        
+        if(document.querySelector(".dndb-cr-calc")) document.querySelector(".dndb-cr-calc").remove();
+        setTimeout(container.appendChild(buildCrHtml(partyCR, getXp())), 500);
     });
 
     observer.observe(document.querySelector(".encounter-builder-sidebar__tabs"), {
@@ -105,4 +118,4 @@ setTimeout(() => {
     });
 
     
-}, 10 * 1000); 
+}, 3 * 1000); 
