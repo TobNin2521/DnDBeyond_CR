@@ -30,9 +30,9 @@ function main() {
     function getXpBudget() {
         if(Number.isInteger(partyLevel)) {
             let cr = {...cr_table.filter(f => f.level === partyLevel)[0]};
-            cr.low += charCount;
-            cr.moderate += charCount;
-            cr.high += charCount;
+            cr.low *= charCount;
+            cr.moderate *= charCount;
+            cr.high *= charCount;
             return cr;
         }
         let lowerPL = Number(Math.floor(partyLevel).toFixed(0)), higherPL = Number(Math.floor(partyLevel + 1).toFixed(0));
@@ -131,12 +131,16 @@ function main() {
     container.appendChild(buildCrHtml(partyCR, 0));
     container.appendChild(buldDiffBar(partyCR, 0));
 
+    function updateCR() {
+        if (document.querySelector(".dndb-cr-calc")) document.querySelector(".dndb-cr-calc").remove();
+        if (document.querySelector(".diff-bar")) document.querySelector(".diff-bar").remove();
+        container.appendChild(buildCrHtml(partyCR, getXp()));
+        container.appendChild(buldDiffBar(partyCR, getXp()));
+    }
+
     var observer = new MutationObserver(function (mutations, observer) {
         setTimeout(() => {
-            if (document.querySelector(".dndb-cr-calc")) document.querySelector(".dndb-cr-calc").remove();
-            if (document.querySelector(".diff-bar")) document.querySelector(".diff-bar").remove();
-            container.appendChild(buildCrHtml(partyCR, getXp()));
-            container.appendChild(buldDiffBar(partyCR, getXp()));
+            updateCR();
         }, 250);
     });
 
@@ -147,7 +151,21 @@ function main() {
         attributes: true
     });
 
-    
+
+    var observerCampaign = new MutationObserver(function (mutations, observer) {
+        partyStats = document.querySelectorAll(".party-stats__stat-value");
+        partyLevel = Number(partyStats[partyStats.length - 1].innerText);
+        charCount = Number(partyStats[partyStats.length - 2].innerText);
+        partyCR = getXpBudget();
+        updateCR();
+    });
+
+    observerCampaign.observe(document.querySelector(".encounter-builder-header__party-selector.party-selector"), {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        attributes: true
+    });
 }; 
 
 function wait() {
