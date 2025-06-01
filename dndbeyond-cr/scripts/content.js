@@ -1,7 +1,9 @@
-setTimeout(() => {
-    if(document.querySelectorAll(".party-stats__stat-value").length < 2) return;
-    let partyLevel = Number(document.querySelectorAll(".party-stats__stat-value")[2].innerText);
-    let charCount = Number(document.querySelectorAll(".party-stats__stat-value")[1].innerText);
+MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+
+function main() {
+    let partyStats = document.querySelectorAll(".party-stats__stat-value");
+    let partyLevel = Number(partyStats[partyStats.length - 1].innerText);
+    let charCount = Number(partyStats[partyStats.length - 2].innerText);
     let cr_table = [
         {level: 1, low: 50, moderate: 75, high: 100},
         {level: 2, low: 100, moderate: 150, high: 200},
@@ -38,9 +40,9 @@ setTimeout(() => {
         let lowerCR = cr_table.filter(f => f.level === lowerPL)[0], higherCR = cr_table.filter(f => f.level === higherPL)[0];
         return {
             level: partyLevel,
-            low: (lowerCR.low + ((higherCR.low - lowerCR.low) * mult)) * charCount,
-            moderate: (lowerCR.moderate + ((higherCR.moderate - lowerCR.moderate) * mult)) * charCount,
-            high: (lowerCR.high + ((higherCR.high - lowerCR.high) * mult)) * charCount        
+            low: Math.round((lowerCR.low + ((higherCR.low - lowerCR.low) * mult)) * charCount),
+            moderate: Math.round((lowerCR.moderate + ((higherCR.moderate - lowerCR.moderate) * mult)) * charCount),
+            high: Math.round((lowerCR.high + ((higherCR.high - lowerCR.high) * mult)) * charCount)
         }
     }
 
@@ -69,7 +71,7 @@ setTimeout(() => {
                 "</div>" +
                 "<div class='encounter-builder-difficulty-summary__stat-total-xp line-item line-item--vertical'>" +
                     "<div class='line-item__label' title='Total Experience Points'>Total XP</div>" +
-                    "<div class='line-item__value'>" + xp + "</div>" +
+                    "<div class='line-item__value'>" + xp + " XP</div>" +
                 "</div>" +
             "</div>" +
             "<div class='encounter-builder-difficulty-summary__xp-legend'>" +
@@ -86,7 +88,32 @@ setTimeout(() => {
                     "<div class='line-item__value'>" + cr.high + " XP</div>" +
                 "</div>" +
             "</div>" +
+        "</div>" +
+        "<div class='diff-bar'>" + 
+            "<div>" + 
+            "</div>" + 
         "</div>");
+    }
+    function buldDiffBar(cr, xp) {
+        let bg = "#ccc";
+        if (xp >= cr.low) {
+            bg = "#0cc30c";
+        }
+        if (xp >= cr.moderate) {
+            bg = "#ffca00";
+        }
+        if (xp >= cr.high) {
+            bg = "#cd2a2a";
+        }
+
+        let width = ((xp / cr.high) * 100).toFixed(0);
+        if(width > 100) width = 100;
+
+        return createElementFromHTML(
+            "<div class='diff-bar' style='height: 30px;background: #ddd; margin-top: 20px;'>" +
+            "<div style='height: 30px;background: " + bg + ";width: " + width + "%;'>" +
+                "</div>" +
+            "</div>");
     }
     function getXp() {
         let xps = document.querySelectorAll(".encounter-builder-sidebar__tabs .difficulty__value");
@@ -102,12 +129,15 @@ setTimeout(() => {
     };
 
     container.appendChild(buildCrHtml(partyCR, 0));
+    container.appendChild(buldDiffBar(partyCR, 0));
 
-    MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-
-    var observer = new MutationObserver(function(mutations, observer) {
-        if(document.querySelector(".dndb-cr-calc")) document.querySelector(".dndb-cr-calc").remove();
-        setTimeout(container.appendChild(buildCrHtml(partyCR, getXp())), 500);
+    var observer = new MutationObserver(function (mutations, observer) {
+        setTimeout(() => {
+            if (document.querySelector(".dndb-cr-calc")) document.querySelector(".dndb-cr-calc").remove();
+            if (document.querySelector(".diff-bar")) document.querySelector(".diff-bar").remove();
+            container.appendChild(buildCrHtml(partyCR, getXp()));
+            container.appendChild(buldDiffBar(partyCR, getXp()));
+        }, 250);
     });
 
     observer.observe(document.querySelector(".encounter-builder-sidebar__tabs"), {
@@ -118,4 +148,13 @@ setTimeout(() => {
     });
 
     
-}, 3 * 1000); 
+}; 
+
+function wait() {
+    let partyStats = document.querySelectorAll(".party-stats__stat-value");
+    if(partyStats !== null && partyStats.length < 2) {
+        setTimeout(wait, 50);
+    }
+    else main();
+}
+wait();
