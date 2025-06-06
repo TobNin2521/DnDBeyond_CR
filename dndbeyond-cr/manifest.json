@@ -8,7 +8,8 @@
       "js": ["scripts/content.js"],
       "matches": [
         "https://dndbeyond.com/encounter-builder",
-        "https://www.dndbeyond.com/encounter-builder"
+        "https://www.dndbeyond.com/encounter-builder",
+        "https://www.dndbeyond.com/encounters/*"
       ]
     }
   ],
